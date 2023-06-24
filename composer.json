@@ -1,0 +1,32 @@
+{
+  "name": "urn2/nx-filter-from",
+  "description": "filter for nx",
+  "homepage": "https://github.com/urn2/nx",
+  "type": "framework",
+  "authors": [
+    {
+      "name": "Vea",
+      "homepage": "https://www.uper.net",
+      "email": "vea@live.cn"
+    }
+  ],
+  "require": {
+    "php": ">=8.2",
+    "urn2/nx": ">=1.2"
+  },
+  "require-dev": {
+    "urn2/nx-log-cli": "0.0.1",
+    "phpunit/phpunit": "^9.0"
+  },
+  "minimum-stability": "stable",
+  "autoload": {
+    "psr-4": {
+      "nx\\parts\\filter\\": [
+        "src/parts/"
+      ],
+      "nx\\helpers\\filter\\": [
+        "src/helpers/"
+      ]
+    }
+  }
+}
