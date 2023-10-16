@@ -4,7 +4,7 @@ error_reporting(E_ALL);
 use PHPUnit\Framework\TestCase;
 const AGREE_LICENSE = true;
 class testFilter extends \nx\app{
-	use \nx\parts\filter\from;
+	use \nx\parts\filter\from, \nx\parts\log\cli;
 }
 class Test extends TestCase{
 	protected ?testFilter $app =null;
@@ -46,20 +46,20 @@ class Test extends TestCase{
 	public function testRuleSort2(){
 		$data=[];
 		try{
-			$data = $this->app->filter([
+			$data = $this->app->filter([// 1->2->3 fail:default default:2
 				'id' => [
 					'int',
-					'throw' => 404,
-					'null' => 'default',
+					'throw' => 404,//2 fail:throw, error:404
+					'null' => 'default',//3 fail:default
 				],
 			], [
-				'null' => 2,
+				'null' => 2,//1 fail:default, default:2
 				'from' => ['id' => null],
 			]);
 		}catch(\Exception){
 			$this->assertSame('Exception', 'throw before null set');
 		}
-		$this->assertSame(null, $data['id']);
+		$this->assertSame(2, $data['id']);
 	}
 	public function testOneKey(){//todo 是否有必要？？
 		$data = $this->app->filter('id', ['from' => ['id' => '1234']]);
@@ -88,5 +88,13 @@ class Test extends TestCase{
 	public function testTypeStringNull(){
 		$data = $this->app->filter(['id' => ['str']], ['from' => ['id' => null]]);
 		$this->assertSame(null, $data['id']);
+	}
+	public function testNull(){
+		$data = $this->app->filter(['id' => []], ['from' => []]);
+		$this->assertSame(null, $data['id']);
+	}
+	public function testNullRemove(){
+		$data = $this->app->filter(['id' => ['null'=>'remove']], ['from' => []]);
+		$this->assertSame([], $data);
 	}
 }

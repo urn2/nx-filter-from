@@ -1,7 +1,7 @@
 {
-  "name": "urn2/nx-filter-from",
+  "name": "veasin/nx-filter-from",
   "description": "filter for nx",
-  "homepage": "https://github.com/urn2/nx",
+  "homepage": "https://github.com/veasin/nx",
   "type": "framework",
   "authors": [
     {
@@ -11,11 +11,12 @@
     }
   ],
   "require": {
-    "php": ">=8.2",
-    "urn2/nx": ">=1.2"
+    "php": ">=8.2"
   },
   "require-dev": {
-    "urn2/nx-log-cli": "0.0.1",
+    "veasin/nx": "*",
+    "veasin/nx-log":"*",
+    "veasin/nx-log-cli":"*",
     "phpunit/phpunit": "^9.0"
   },
   "minimum-stability": "stable",
@@ -28,5 +29,5 @@
         "src/helpers/"
       ]
     }
-  }
+        }
 }

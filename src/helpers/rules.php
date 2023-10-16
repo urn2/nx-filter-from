@@ -15,12 +15,12 @@ class rules{
 			rule::transfer,
 			'parse' => 'parseType',
 			'transfer' => 'transferType',
-			'abbr' => ['obj', 'object', 'keys', 'arr', 'array', 'values', 'json', 'int', 'integer', 'uint', 'unsigned', 'str', 'string', 'date', 'hex', 'base64'],
+			'abbr' => ['bool', 'boolean', 'obj', 'object', 'keys', 'arr', 'array', 'values', 'json', 'int', 'integer', 'uint', 'unsigned', 'str', 'string', 'date', 'hex', 'base64'],
 			'mode' => 'replace',
 		],
 		'json' => [rule::transfer, 'transfer' => 'transferJson', 'mode' => 'replace'],
 		'null' => [rule::check, 'parse' => 'parseNull', 'check' => 'checkNull', 'abbr' => ['throw', 'remove'],],
-		'empty' => [rule::check,],
+		'empty' => [rule::check, 'parse' => 'parseNull', 'check' => 'checkEmpty'],
 		'digit' => [rule::check, 'parse' => 'parseDigit', 'check' => 'checkDigit', 'abbr' => ['=', '>', '<', '!=', '>=', '<='], 'mode' => 'repeat'],
 		'match' => [rule::check, 'abbr' => ['number', 'email', 'url', 'ip-v4', 'ip-v6']],
 		'email' => [rule::check, 'check' => 'matchEmail', 'mode' => 'replace'],
@@ -123,6 +123,7 @@ class rules{
 	 * @return array|array[]
 	 */
 	static protected function mergeRules($rules): array{
+		//static::log('merge rules: ', $rules);
 		$final = [];
 		$check = [];
 		foreach($rules as $rule){
@@ -142,27 +143,6 @@ class rules{
 		$final['check'] = $check;
 		return $final;
 	}
-	/*
-	 * 替换逻辑 [...$global, ...$set] 当 set和global中都存在同样的key时，key 出现的顺序会混乱
-	 * $1 =[1,a:2,3]
-	 * $2 =[4,a:5,6]
-	 * [...$1, ...$2] => [1,a:5,3,4,6] ???
-	 * right => [1,3,4,a:5,6]
-	 */
-	static protected function preserveSortMerge(...$arrays): array{
-		$r = [];
-		foreach($arrays as $array){
-			foreach($array as $key => $value){
-				if(is_int($key)){
-					$r[] = $value;
-				}else{
-					if(array_key_exists($key, $r)) unset($r[$key]);
-					$r[$key] = $value;
-				}
-			}
-		}
-		return $r;
-	}
 	/**
 	 * 解析并合并规则，按规则类型分别进行处理，形成最终执行规则
 	 *
@@ -171,11 +151,9 @@ class rules{
 	 * @return array[]
 	 */
 	static public function parse(array $set = [], array $global = []): array{//mergeRules
-		//static::log('parse', $global, $set, static::preserveSortMerge($global, $set));
-		$rules = static::formatRules(static::preserveSortMerge($global, $set));
-		//		$rules = static::formatRules([...$global, ...$set]);
-		//static::log($rules);
-		return static::mergeRules($rules);
+		//为啥要先合并后再整理？？？ bug: set[error]='xxx', global[error]=400 => error[code:400, message:'xxx']
+		//$rules = static::formatRules([...$global, ...$set]);
+		return static::mergeRules(array_merge(static::formatRules($global), static::formatRules($set)));
 	}
 	static public function transfer($value, $rule): mixed{
 		//static::log('transfer: ', $rule['transfer']);
@@ -196,7 +174,7 @@ class rules{
 	/**
 	 * @throws \Exception
 	 */
-	static public function check($value, $rule = []): array{
+	static public function check($value, $rule = []): array{//todo 顺序，如 先 null or 先其他check
 		foreach($rule['check'] as $check => $options){
 			$config = &static::$_names[0][$check];
 			//static::log('check', $value, $check, $options, $config);
@@ -215,13 +193,13 @@ class rules{
 						//nothing
 						break;
 					case 'throw':
-						throw new \Exception($_options['error']['message'] ?? "filter check: {$rule['key']} $check fail.", $_options['error']['code'] ?? 0,
-						);
+						$throwable =$_options['error']['exception'] ?? \Exception::class;
+						throw new $throwable($_options['error']['message'] ?? "filter check: [{$rule['key']}] $check : fail.", $_options['error']['code'] ?? 0);
 					case 'default':
 						$value = $_options['default'];
 						break;
 					case 'remove':
-						return ['remove'];
+						return ['remove', null];
 				}
 			}else throw new \LogicException("filter:无效的检测结果 ( $check )");
 		}
@@ -249,6 +227,7 @@ class rules{
 			'int' => $name = 'integer',
 			'uint' => $name = 'unsigned',
 			'str' => $name = 'string',
+			'bool' => $name = 'boolean',
 		};
 		return ['type', ['type' => $name, 'options' => $set, 'transfer' => &$config['transfer']]];
 	}
@@ -259,6 +238,7 @@ class rules{
 		//static::log('parseNull', $name, $set);
 		$_set = [];
 		switch($name){
+			case 'empty':
 			case 'null':
 				if(is_array($set)){
 					$has_fail = array_key_exists('fail', $set);
@@ -289,19 +269,24 @@ class rules{
 			case 'throw'://throw | throw=>ERROR_SET
 				$set && $_set['error'] = $set;
 				$_set['fail'] = $name;
+				$name ='null';
 				break;
 			case 'remove':
 				$_set['fail'] = $name;
+				$name ='null';
 				break;
 			//			case 'default':
 			//				$_set['fail'] = 'default';
 			//				$_set['default'] = null;
 			//				break;
 		}
-		return ['null', $_set];
+		return [$name, $_set];
 	}
 	static protected function checkNull($value, $options = [], $rule = []): bool{
 		return !is_null($value);
+	}
+	static protected function checkEmpty($value, $options = [], $rule = []): bool{
+		return !empty($value);
 	}
 	static protected function parseDefault($name, $set, $config = []): array{
 		return ['default', $set ?? null];
@@ -382,6 +367,10 @@ class rules{
 		//static::log('transfer type', $value, $type, $set);
 		if(null === $value) return null;
 		switch($type){
+			case 'bool':
+			case 'boolean':// id:{type:'bool'}
+				$value = !!$value;
+				break;
 			case 'str':
 			case 'string':// id:{type:'str'}
 				$value = (string)$value;

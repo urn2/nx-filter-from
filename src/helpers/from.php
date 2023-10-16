@@ -38,13 +38,14 @@ class from{
 			//\nx\app::$instance?->log('value:', $value);
 			[$result, $options] = rules::check($value, $rule);
 			//\nx\app::$instance?->log('check result:', $result, $options);
-			$r[$key] = $value;
 			switch($result){
 				case 'pass':
 					$r[$key] = $options['value'];
 					break;
 				case 'remove':
 					continue 2;
+				default://todo 保留
+					$r[$key] = $value;
 			}
 		}
 		return $one_key ?$r[$one_key] :$r;
