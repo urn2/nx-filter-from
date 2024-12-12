@@ -127,6 +127,7 @@ class rules{
 		$final = [];
 		$check = [];
 		foreach($rules as $rule){
+			if(!isset($rule[0])) continue;
 			$config = &static::$_names[0][$rule[0]];
 			//static::log('rule: ', $rule, $config);
 			if(null === $config){//未匹配到规则
