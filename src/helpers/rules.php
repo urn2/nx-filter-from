@@ -46,8 +46,8 @@ class rules{
 			}
 		}
 	}
-	static public function log($labelOrVar, ...$var):void{
-		if(\nx\app::$instance) \nx\app::$instance?->log($labelOrVar, ...$var);
+	static public function log($log):void{
+		if(\nx\app::$instance) \nx\app::$instance?->runtime($log, 'ff');
 	}
 	/**
 	 * 设置规则
@@ -61,7 +61,7 @@ class rules{
 	 * @return void
 	 */
 	static public function set(string $name, rule $type, callable $parse = null, callable $check = null, array $abbr = [], bool $repeat = false): void{
-		static::log('set rule: ', $name, $type);
+		static::log("set rule: $name ");
 		self::$Rules[$name] = [$type, 'repeat' => $repeat];
 		if(is_callable($parse)) self::$Rules[$name]['parse'] = $parse;
 		if(is_callable($check)) self::$Rules[$name]['check'] = $check;
@@ -90,7 +90,7 @@ class rules{
 					$set = null;
 				}else{
 					if($set instanceof \Closure){//fn()
-						static::log('chaos rule', $rule, $set);
+						//static::log('chaos rule ');
 						$rule = 'callback';
 						$set = ['call' => $set];
 						//}elseif(is_array($set)){ // [[]] => ['keys'=>[]]
@@ -99,7 +99,7 @@ class rules{
 				}
 			}else{
 				if($rule instanceof \Closure){//[fn()=>[]]
-					static::log('chaos rule', $rule, $set);
+					//static::log('chaos rule', $rule, $set);
 					$rule = 'callback';
 					$set = ['call' => $rule, 'args' => $set];
 				}else{
@@ -130,7 +130,7 @@ class rules{
 			$config = &static::$_names[0][$rule[0]];
 			//static::log('rule: ', $rule, $config);
 			if(null === $config){//未匹配到规则
-				static::log('no rule: ', $rule[0]);
+				static::log('no rule: '. $rule[0]);
 				continue;
 			}
 			if(rule::check === $config[0]) $_c = &$check[$rule[0]];else$_c = &$final[$config[0]->name];
