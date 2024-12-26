@@ -68,8 +68,8 @@ class from{
 	 */
 	public function set(string $name,
 		rule $type,
-		callable $parse = null,
-		callable $check = null,
+		?callable $parse = null,
+		?callable $check = null,
 		array $abbr = []
 	): void{
 		rules::set($name, $type, $parse, $check, $abbr);

@@ -60,7 +60,7 @@ class rules{
 	 * @param bool          $repeat 规则是否允许配置多条
 	 * @return void
 	 */
-	static public function set(string $name, rule $type, callable $parse = null, callable $check = null, array $abbr = [], bool $repeat = false): void{
+	static public function set(string $name, rule $type, ?callable $parse = null, ?callable $check = null, array $abbr = [], bool $repeat = false): void{
 		static::log("set rule: $name ");
 		self::$Rules[$name] = [$type, 'repeat' => $repeat];
 		if(is_callable($parse)) self::$Rules[$name]['parse'] = $parse;
