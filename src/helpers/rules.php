@@ -187,7 +187,7 @@ class rules{
 			}
 			if(is_array($r) && 2 === count($r)){
 				if(is_bool($r[0])) $r[0] = $r[0] ? 'pass' : $r[1]['fail'] ?? 'throw';
-				$_options = static::mergeResult($r[1], $rule);
+				$_options = static::mergeResult($r[1] ?? [], $rule);
 				//static::log("check [$check] result", $r, $_options);
 				switch($r[0]){
 					case 'pass':
